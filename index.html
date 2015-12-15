@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="http://getbootstrap.com/examples/justified-nav/justified-nav.css" rel="stylesheet">
+
+    <style>
+        .axis path {
+            fill: none;
+            stroke: #777;
+            shape-rendering: crispEdges;
+        }
+        .axis text {
+            font-family: Lato;
+            font-size: 13px;
+        }
+        .legend{
+          font-size: 16px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="jumbotron">
+
+            <svg id="visualisation" width="1000" height="500"></svg>
+            <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+            <script>
+                function InitChart() {
+                    
+                    var data = [{
+                        "StockId": "Stock1",
+                        "sale": "202",
+                        "year": "2000"
+                    }, {
+                        "StockId": "Stock1",
+                        "sale": "215",
+                        "year": "2002"
+                    }, {
+                        "StockId": "Stock1",
+                        "sale": "179",
+                        "year": "2004"
+                    }, {
+                        "StockId": "Stock1",
+                        "sale": "199",
+                        "year": "2006"
+                    }, {
+                        "StockId": "Stock1",
+                        "sale": "134",
+                        "year": "2008"
+                    }, {
+                        "StockId": "Stock1",
+                        "sale": "176",
+                        "year": "2010"
+                    }, {
+                        "StockId": "Stock2",
+                        "sale": "100",
+                        "year": "2000"
+                    }, {
+                        "StockId": "Stock2",
+                        "sale": "215",
+                        "year": "2002"
+                    }, {
+                        "StockId": "Stock2",
+                        "sale": "179",
+                        "year": "2004"
+                    }, {
+                        "StockId": "Stock2",
+                        "sale": "199",
+                        "year": "2006"
+                    }, {
+                        "StockId": "Stock2",
+                        "sale": "134",
+                        "year": "2008"
+                    }, {
+                        "StockId": "Stock2",
+                        "sale": "176",
+                        "year": "2013"
+                    }];
+                  //organise data based on stockid
+                  
+                  var stockGroup = d3.nest().key(function(d){
+                    return d.StockId;
+                  })
+                  .entries(data);
+                  console.log(stockGroup);
+                
+                  //sort the data based on stockid
+                    var vis = d3.select("#visualisation"),
+                        WIDTH = 1000,
+                        HEIGHT = 500,
+                        MARGINS = {
+                            top: 50,
+                            right: 20,
+                            bottom: 50,
+                            left: 50
+                        },
+ 
+                        // set the min and max values for domain dynamically from data source/array.
+                        xScale = d3.scale.linear().range([MARGINS.left,   WIDTH - MARGINS.right]).domain([d3.min(data, function(d) {
+    return d.year;
+}), d3.max(data, function(d) {
+    return d.year;
+})]),
+
+                        yScale = d3.scale.linear().range([HEIGHT - MARGINS.top, MARGINS.bottom]).domain([d3.min(data, function(d) {
+    return d.sale;
+}), d3.max(data, function(d) {
+    return d.sale;
+})]),
+                        xAxis = d3.svg.axis()
+                        .scale(xScale).tickFormat(d3.format('0f'));
+                        yAxis = d3.svg.axis()
+                        .scale(yScale)
+                        .orient("left"); //change the orientation to left
+                    
+                    vis.append("svg:g")
+                        .attr("transform", "translate(0," + (HEIGHT - MARGINS.bottom) + ")") // move the x-axis downwards
+                        .call(xAxis);
+                    vis.append("svg:g")
+                        .attr("transform", "translate(" + (MARGINS.left) + ",0)")
+                        .call(yAxis);
+                    var lineGen = d3.svg.line() // to draw a line
+                        .x(function(d) {
+                            return xScale(d.year); // specify x coordinate
+                        })
+                        .y(function(d) {
+                            return yScale(d.sale); // specify y coordinate
+                        })
+                      .interpolate("basis");
+                    
+                    lSpace = WIDTH/stockGroup.length;
+                    stockGroup.forEach(function(d, i){
+                      vis.append('svg:path')
+                        .attr('d', lineGen(d.values, xScale, yScale))
+//                        .attr('stroke', 'blue')
+                      .attr('stroke', function(d, j){
+                          return "hsl(" + Math.random() * 360 + ", 100%, 50%)";
+                        })
+                        .attr('stroke-width', 2)
+                      .attr('id', 'line_'+d.key)
+                        .attr('fill', function(d, j){
+                          return "hsl(" + Math.random() * 360 + ", 100%, 50%)";
+                        });
+                      // add the legends - stock 1 stock 2
+                      vis.append("text")
+                      .attr("x", (lSpace / 2) + i * lSpace)
+                      .attr("y", HEIGHT)
+                      .style("fill", "black")
+                      .attr("class", "legend")
+                       .on('click',function(){
+                                var active   = d.active ? false : true;
+                                var opacity = active ? 0 : 1;
+                                d3.select("#line_" + d.key).style("opacity", opacity);
+                                d.active = active;
+                            })
+                      .text(d.key);
+                    });
+                }
+                InitChart();
+            </script>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
